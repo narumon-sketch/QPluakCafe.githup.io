@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QPluakCafe - ระบบจองคิว</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #8B5CF6 0%, #10B981 50%, #F59E0B 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #8B5CF6, #10B981);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+        
+        .menu-item {
+            transition: all 0.3s ease;
+        }
+        
+        .menu-item:hover {
+            transform: scale(1.02);
+        }
+        
+        .queue-number {
+            background: linear-gradient(45deg, #F59E0B, #EF4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        @keyframes bounce-in {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .animate-bounce-in {
+            animation: bounce-in 0.6s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-6 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">QPluakCafe</h1>
+            <p class="text-lg opacity-90">ระบบจองคิวออนไลน์</p>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="flex justify-center space-x-2 py-3">
+                <button onclick="showPage('menu')" class="nav-btn px-6 py-3 rounded-full font-medium transition-all bg-purple-900 hover:bg-purple-950 text-white">
+                    📋 เมนู & จองคิว
+                </button>
+                <button onclick="showPage('queue-status')" class="nav-btn px-6 py-3 rounded-full font-medium transition-all bg-green-900 hover:bg-green-950 text-white">
+                    👤 สถานะคิวของฉัน
+                </button>
+                <button onclick="showPage('current-queue')" class="nav-btn px-6 py-3 rounded-full font-medium transition-all bg-orange-800 hover:bg-orange-900 text-white">
+                    📺 คิวปัจจุบัน
+                </button>
+                <button onclick="showPage('admin')" class="nav-btn px-6 py-3 rounded-full font-medium transition-all bg-pink-900 hover:bg-pink-950 text-white">
+                    ⚙️ ผู้ดูแลร้าน
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu Page -->
+    <div id="menu-page" class="page max-w-4xl mx-auto px-4 py-8">
+        <h2 class="text-2xl font-bold text-center mb-8 text-purple-800">🍹 เมนูเครื่องดื่ม & ของว่าง</h2>
+        
+        <!-- Cart Summary -->
+        <div id="cart-summary" class="bg-white rounded-xl p-4 card-shadow mb-6 hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-bold text-purple-800">🛒 รายการที่เลือก</h3>
+                <button onclick="clearCart()" class="text-red-500 hover:text-red-700 text-sm">ล้างทั้งหมด</button>
+            </div>
+            <div id="cart-items" class="space-y-2 mb-4"></div>
+            <div class="border-t pt-3">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-bold">รวมทั้งหมด:</span>
+                    <span id="cart-total" class="font-bold text-green-600 text-xl">0 บาท</span>
+                </div>
+                <button onclick="proceedToOrder()" class="bg-green-500 hover:bg-green-600 w-full py-3 text-white font-bold rounded-lg transition-colors">
+                    จองคิว
+                </button>
+            </div>
+        </div>
+        
+        <!-- First Row: Coffee, Tea, Cocoa/Milk -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Coffee Section -->
+            <div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-bold mb-2 text-purple-700 text-center">☕ Coffee</h3>
+                    <div class="text-center text-purple-600 font-semibold mb-4 border-b-2 border-purple-200 pb-2">40 บาท</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 hover:bg-purple-800 rounded-lg cursor-pointer bg-purple-700 text-white" onclick="addToCart('อเมริกาโน่', 40)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">☕</span>
+                                <span class="font-medium">อเมริกาโน่</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-purple-800 rounded-lg cursor-pointer bg-purple-700 text-white" onclick="addToCart('เอสเพรสโซ่', 40)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">☕</span>
+                                <span class="font-medium">เอสเพรสโซ่</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-purple-800 rounded-lg cursor-pointer bg-purple-700 text-white" onclick="addToCart('คาปูชิโน่', 40)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">☕</span>
+                                <span class="font-medium">คาปูชิโน่</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-purple-800 rounded-lg cursor-pointer bg-purple-700 text-white" onclick="addToCart('มอคค่า', 40)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">☕</span>
+                                <span class="font-medium">มอคค่า</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-purple-800 rounded-lg cursor-pointer bg-purple-700 text-white" onclick="addToCart('ลาเต้', 40)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">☕</span>
+                                <span class="font-medium">ลาเต้</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tea Section -->
+            <div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-bold mb-2 text-purple-700 text-center">🍵 Tea</h3>
+                    <div class="text-center text-purple-600 font-semibold mb-4 border-b-2 border-purple-200 pb-2">30 บาท</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 hover:bg-green-800 rounded-lg cursor-pointer bg-green-700 text-white" onclick="addToCart('ชาเขียว', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🍵</span>
+                                <span class="font-medium">ชาเขียว</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-green-800 rounded-lg cursor-pointer bg-green-700 text-white" onclick="addToCart('ชาไทย', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🍵</span>
+                                <span class="font-medium">ชาไทย</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-green-800 rounded-lg cursor-pointer bg-green-700 text-white" onclick="addToCart('ชามะนาว', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🍵</span>
+                                <span class="font-medium">ชามะนาว</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-green-800 rounded-lg cursor-pointer bg-green-700 text-white" onclick="addToCart('ชาดำ', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🍵</span>
+                                <span class="font-medium">ชาดำ</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-green-800 rounded-lg cursor-pointer bg-green-700 text-white" onclick="addToCart('ชาเขียวมะนาว', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🍵</span>
+                                <span class="font-medium">ชาเขียวมะนาว</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cocoa / Milk Section -->
+            <div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-bold mb-2 text-purple-700 text-center">🥛 Cocoa / Milk</h3>
+                    <div class="text-center text-purple-600 font-semibold mb-4 border-b-2 border-purple-200 pb-2">30 บาท</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 hover:bg-orange-700 rounded-lg cursor-pointer bg-orange-600 text-white" onclick="addToCart('ไมโล', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥛</span>
+                                <span class="font-medium">ไมโล</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-orange-700 rounded-lg cursor-pointer bg-orange-600 text-white" onclick="addToCart('โกโก้', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥛</span>
+                                <span class="font-medium">โกโก้</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-orange-700 rounded-lg cursor-pointer bg-orange-600 text-white" onclick="addToCart('โอวัลติน', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥛</span>
+                                <span class="font-medium">โอวัลติน</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-orange-700 rounded-lg cursor-pointer bg-orange-600 text-white" onclick="addToCart('นมสดคาราเมล', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥛</span>
+                                <span class="font-medium">นมสดคาราเมล</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-orange-700 rounded-lg cursor-pointer bg-orange-600 text-white" onclick="addToCart('นมชมพู', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥛</span>
+                                <span class="font-medium">นมชมพู</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-orange-700 rounded-lg cursor-pointer bg-orange-600 text-white" onclick="addToCart('เผือกนมสด', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥛</span>
+                                <span class="font-medium">เผือกนมสด</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Second Row: Italian Soda, Sandwich -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Italian Soda Section -->
+            <div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-bold mb-2 text-purple-700 text-center">🥤 Italian Soda</h3>
+                    <div class="text-center text-purple-600 font-semibold mb-4 border-b-2 border-purple-200 pb-2">25-30 บาท</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('บลูฮาวาย', 25)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">บลูฮาวาย</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('สตอร์เบอรรี่โซดา', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">สตอร์เบอรรี่โซดา</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('แอปเปิ้ลเขียวโซดา', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">แอปเปิ้ลเขียวโซดา</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('สับปะรดโซดา', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">สับปะรดโซดา</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('ส้มโซดา', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">ส้มโซดา</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('น้ำแดงโซดา', 25)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">น้ำแดงโซดา</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('น้ำเขียวโซดา', 25)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">น้ำเขียวโซดา</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('แดงมะนาวโซดา', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">แดงมะนาวโซดา</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('เขียวมะนาวโซดา', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">เขียวมะนาวโซดา</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-pink-700 rounded-lg cursor-pointer bg-pink-600 text-white" onclick="addToCart('น้ำผึ้งมะนาวโซดา', 30)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥤</span>
+                                <span class="font-medium">น้ำผึ้งมะนาวโซดา</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sandwich Section -->
+            <div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-bold mb-2 text-purple-700 text-center">🥪 แซนด์วิช</h3>
+                    <div class="text-center text-purple-600 font-semibold mb-4 border-b-2 border-purple-200 pb-2">20 บาท</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 hover:bg-orange-800 rounded-lg cursor-pointer bg-orange-700 text-white" onclick="addToCart('แซนด์วิชสามเหลี่ยมเล็ก', 20)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥪</span>
+                                <span class="font-medium">แซนด์วิชสามเหลี่ยมเล็ก</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 hover:bg-orange-800 rounded-lg cursor-pointer bg-orange-700 text-white" onclick="addToCart('แซนด์วิชโบราณ', 20)">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🥪</span>
+                                <span class="font-medium">แซนด์วิชโบราณ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md animate-bounce-in">
+            <h3 class="text-xl font-bold mb-4 text-center text-purple-800">📝 จองคิว</h3>
+            
+            <form id="order-form" onsubmit="submitOrder(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold mb-2">รายการที่สั่ง:</label>
+                    <div id="selected-item" class="bg-gray-100 p-3 rounded-lg font-medium"></div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-bold mb-2">ชื่อนักเรียน:</label>
+                    <input type="text" id="student-name" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-bold mb-2">รอบเวลารับของ:</label>
+                    <select id="time-slot" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <option value="">เลือกรอบเวลา</option>
+                        <option value="พักเช้า (10:00-10:30)">พักเช้า (10:00-10:30)</option>
+                        <option value="พักกลางวัน (12:00-13:00)">พักกลางวัน (12:00-13:00)</option>
+                        <option value="หลังเลิกเรียน (15:30-16:00)">หลังเลิกเรียน (15:30-16:00)</option>
+                    </select>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="button" onclick="closeOrderModal()" class="flex-1 py-3 bg-gray-300 text-gray-700 font-bold rounded-full hover:bg-gray-400 transition-colors">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full transition-colors">
+                        ยืนยันจองคิว
+                    </button>
+                </div>
+            </form>
+        </div>
+        </div>
+    </div>
+
+    <!-- Queue Status Page -->
+    <div id="queue-status-page" class="page hidden max-w-4xl mx-auto px-4 py-8">
+        <h2 class="text-2xl font-bold text-purple-800 text-center mb-8">🎫 สถานะคิวของฉัน</h2>
+        
+        <div class="bg-white rounded-xl p-6 card-shadow text-center">
+            <div id="my-queue-info">
+                <p class="text-gray-600 mb-4">กรุณากรอกชื่อเพื่อดูสถานะคิว</p>
+                <input type="text" id="check-name" placeholder="ชื่อนักเรียน" class="w-full max-w-sm p-3 border border-gray-300 rounded-lg mb-6 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <div>
+                    <button onclick="checkMyQueue()" class="bg-purple-700 hover:bg-purple-800 px-8 py-3 text-white font-bold rounded-full transition-colors">
+                        ตรวจสอบสถานะ
+                    </button>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Current Queue Page -->
+    <div id="current-queue-page" class="page hidden max-w-4xl mx-auto px-4 py-8">
+        <h2 class="text-2xl font-bold text-purple-800 text-center mb-4">📺 คิวปัจจุบัน</h2>
+        <div class="text-center mb-8">
+            <button onclick="refreshCurrentQueue()" class="bg-green-500 hover:bg-green-600 px-6 py-2 text-white font-medium rounded-full transition-colors inline-flex items-center space-x-2 text-sm">
+                <span>🔄</span>
+                <span>รีเฟรช</span>
+            </button>
+        </div>
+        
+        <!-- Status Display Row -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <!-- กำลังเตรียม -->
+            <div class="bg-white rounded-xl p-6 card-shadow text-center">
+                <div class="text-3xl mb-2">👨‍🍳</div>
+                <h3 class="text-sm font-bold mb-3 text-orange-600">กำลังเตรียม</h3>
+                <div id="preparing-queue" class="space-y-2">
+                    <p class="text-gray-500 text-sm">ไม่มีคิว</p>
+                </div>
+            </div>
+            
+            <!-- คิวถัดไป -->
+            <div class="bg-white rounded-xl p-6 card-shadow text-center">
+                <div class="text-3xl mb-2">⏳</div>
+                <h3 class="text-sm font-bold mb-3 text-blue-600">คิวถัดไป</h3>
+                <div id="next-queue" class="space-y-2">
+                    <p class="text-gray-500 text-sm">ไม่มีคิว</p>
+                </div>
+            </div>
+            
+            <!-- เสร็จแล้ว -->
+            <div class="bg-white rounded-xl p-6 card-shadow text-center">
+                <div class="text-3xl mb-2">✅</div>
+                <h3 class="text-sm font-bold mb-3 text-green-600">เสร็จแล้ว</h3>
+                <div id="completed-queue" class="space-y-2">
+                    <p class="text-gray-500 text-sm">ไม่มีคิว</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-8 card-shadow text-center mb-6">
+            <h3 class="text-lg font-bold mb-4">กำลังเรียกคิว</h3>
+            <div class="text-6xl font-bold queue-number mb-2" id="current-queue-number">-</div>
+            <p class="text-gray-600" id="current-queue-name">รอการเรียกคิว</p>
+        </div>
+        
+        <div class="bg-white rounded-xl p-6 card-shadow">
+            <h3 class="text-lg font-bold mb-4 text-center">รายการคิวทั้งหมด</h3>
+            <div id="all-queues-display" class="space-y-2">
+                <p class="text-gray-600 text-center">ไม่มีคิวถัดไป</p>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Admin Page -->
+    <div id="admin-page" class="page hidden max-w-4xl mx-auto px-4 py-8">
+        <!-- Admin Login -->
+        <div id="admin-login" class="max-w-md mx-auto">
+            <div class="bg-white rounded-xl p-8 card-shadow text-center">
+                <div class="text-4xl mb-4">🔐</div>
+                <h2 class="text-2xl font-bold text-purple-800 mb-6">เข้าสู่ระบบผู้ดูแล</h2>
+                <form onsubmit="adminLogin(event)">
+                    <div class="mb-6">
+                        <input type="password" id="admin-password" placeholder="รหัสผ่าน" required 
+                               class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center text-lg">
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 py-3 text-white font-bold rounded-full transition-colors">
+                        เข้าสู่ระบบ
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Content (hidden by default) -->
+        <div id="admin-content" class="hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-purple-800 mb-4">👨‍💼 ผู้ดูแลร้าน</h2>
+                <button onclick="adminLogout()" class="bg-red-500 hover:bg-red-600 px-6 py-2 text-white font-medium rounded-full transition-colors text-sm">
+                    ออกจากระบบ
+                </button>
+            </div>
+        
+        <!-- Admin Sub Navigation -->
+        <div class="flex justify-center space-x-4 mb-8">
+            <button onclick="showAdminSubPage('queue-management')" id="queue-management-btn" class="admin-sub-btn px-6 py-3 rounded-full font-medium transition-all bg-purple-600 hover:bg-purple-700 text-white">
+                🎯 จัดการคิว
+            </button>
+            <button onclick="showAdminSubPage('sales-stats')" id="sales-stats-btn" class="admin-sub-btn px-6 py-3 rounded-full font-medium transition-all bg-gray-600 hover:bg-gray-700 text-white">
+                📊 สถิติการขาย
+            </button>
+        </div>
+
+        <!-- Queue Management Sub Page -->
+        <div id="queue-management-subpage" class="admin-subpage">
+            
+            <!-- Main Layout: Queue Management Left, Orders Right -->
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Control Buttons - Left Side -->
+                <div>
+                    <div class="bg-white rounded-xl p-4 card-shadow">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-base font-bold text-purple-800">🎯 จัดการคิว</h4>
+                        </div>
+                        <div class="space-y-2">
+                            <button onclick="startNextQueue()" class="w-full p-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full text-xs hover:scale-105 transition-all">
+                                🚀 เริ่มเตรียมคิวถัดไป
+                            </button>
+                            <button onclick="completeCurrentQueue()" class="w-full p-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full text-xs hover:scale-105 transition-all">
+                                ✅ เสร็จแล้ว-เรียกรับ
+                            </button>
+                            <button onclick="skipCurrentQueue()" class="w-full p-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-full text-xs hover:scale-105 transition-all">
+                                ⏭️ ข้ามคิวปัจจุบัน
+                            </button>
+                            <button onclick="refreshAdminData()" class="w-full p-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-full text-xs hover:scale-105 transition-all">
+                                🔄 รีเฟรชข้อมูล
+                            </button>
+                            <button onclick="clearAllQueues()" class="w-full p-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-full text-xs hover:scale-105 transition-all">
+                                🗑️ เคลียร์คิวทั้งหมด
+                            </button>
+                        </div>
+                        
+                        <!-- Current Status Display -->
+                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                            <h5 class="font-bold text-xs mb-2 text-gray-700">สถานะปัจจุบัน:</h5>
+                            <div id="current-status" class="text-xs text-gray-600">
+                                <div>🔄 รอการอัพเดต...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Orders List - Right Side -->
+                <div>
+                    <div class="bg-white rounded-xl p-4 card-shadow">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-base font-bold text-purple-800">📋 รายการออเดอร์ทั้งหมด</h4>
+                        </div>
+                        <div id="all-orders" class="space-y-2 max-h-96 overflow-y-auto">
+                            <p class="text-gray-600 text-center">ไม่มีออเดอร์</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Statistics Sub Page -->
+        <div id="sales-stats-subpage" class="admin-subpage hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-purple-800">📊 สถิติการขาย</h3>
+                <button onclick="refreshSalesStats()" class="bg-blue-500 hover:bg-blue-600 px-3 py-2 text-white font-medium rounded-full transition-colors inline-flex items-center space-x-1 text-sm">
+                    <span>🔄</span>
+                    <span>รีเฟรช</span>
+                </button>
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="bg-white rounded-xl p-4 card-shadow mb-6">
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-medium text-gray-700">📅 เลือกช่วงเวลา</span>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm text-gray-600">จากวันที่:</label>
+                        <input type="date" id="start-date" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm text-gray-600">ถึงวันที่:</label>
+                        <input type="date" id="end-date" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <button onclick="loadSalesData()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 text-white font-medium rounded-full transition-colors inline-flex items-center space-x-1 text-sm">
+                        <span>📊</span>
+                        <span>โหลดข้อมูล</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-xl p-6 card-shadow text-center">
+                    <div class="text-3xl mb-2">📈</div>
+                    <h4 class="text-sm font-bold text-gray-600 mb-1">ยอดขายรวม</h4>
+                    <div id="today-sales" class="text-2xl font-bold text-green-600">0 บาท</div>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow text-center">
+                    <div class="text-3xl mb-2">🛒</div>
+                    <h4 class="text-sm font-bold text-gray-600 mb-1">ออเดอร์ทั้งหมด</h4>
+                    <div id="total-orders" class="text-2xl font-bold text-blue-600">0</div>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow text-center">
+                    <div class="text-3xl mb-2">💵</div>
+                    <h4 class="text-sm font-bold text-gray-600 mb-1">ค่าเฉลี่ยต่อออเดอร์</h4>
+                    <div id="avg-order-value" class="text-2xl font-bold text-purple-600">0 บาท</div>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow text-center">
+                    <div class="text-3xl mb-2">🏆</div>
+                    <h4 class="text-sm font-bold text-gray-600 mb-1">เมนูขายดี</h4>
+                    <div id="popular-item" class="text-lg font-bold text-orange-600">-</div>
+                </div>
+            </div>
+
+
+
+
+        </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md text-center animate-bounce-in">
+            <div class="text-6xl mb-4">🎉</div>
+            <h3 class="text-xl font-bold mb-4 text-green-600">จองคิวสำเร็จ!</h3>
+            <div id="success-details" class="mb-6 text-gray-700"></div>
+            <button onclick="closeSuccessModal()" class="btn-primary px-6 py-3 text-white font-bold rounded-full">
+                ตกลง
+            </button>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentOrder = {};
+        let cart = [];
+        let queueData = JSON.parse(localStorage.getItem('queueData')) || [];
+        let currentQueueIndex = parseInt(localStorage.getItem('currentQueueIndex')) || 0;
+        let queueCounter = parseInt(localStorage.getItem('queueCounter')) || 1;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showPage('menu');
+            updateCurrentQueue();
+            updateAllOrders();
+        });
+
+        // Navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId + '-page').classList.remove('hidden');
+            
+            // Update navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('opacity-100');
+                btn.classList.add('opacity-70');
+            });
+            
+            event.target.classList.add('opacity-100');
+            event.target.classList.remove('opacity-70');
+            
+            // Refresh data when showing certain pages
+            if (pageId === 'current-queue') {
+                updateCurrentQueue();
+            } else if (pageId === 'admin') {
+                // Check if admin is logged in
+                const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+                if (isLoggedIn) {
+                    document.getElementById('admin-login').classList.add('hidden');
+                    document.getElementById('admin-content').classList.remove('hidden');
+                    showAdminSubPage('queue-management');
+                    updateCurrentStatus();
+                } else {
+                    document.getElementById('admin-login').classList.remove('hidden');
+                    document.getElementById('admin-content').classList.add('hidden');
+                }
+            }
+        }
+
+        // Admin login functions
+        function adminLogin(event) {
+            event.preventDefault();
+            const password = document.getElementById('admin-password').value;
+            
+            if (password === 'admin123') {
+                localStorage.setItem('adminLoggedIn', 'true');
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                document.getElementById('admin-password').value = '';
+                showAdminSubPage('queue-management');
+                updateCurrentStatus();
+            } else {
+                alert('รหัสผ่านไม่ถูกต้อง');
+                document.getElementById('admin-password').value = '';
+            }
+        }
+
+        function adminLogout() {
+            localStorage.removeItem('adminLoggedIn');
+            document.getElementById('admin-login').classList.remove('hidden');
+            document.getElementById('admin-content').classList.add('hidden');
+            document.getElementById('admin-password').value = '';
+        }
+
+        // Cart functions
+        function addToCart(itemName, price) {
+            const existingItem = cart.find(item => item.name === itemName);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ name: itemName, price: price, quantity: 1 });
+            }
+            updateCartDisplay();
+        }
+
+        function removeFromCart(itemName) {
+            const itemIndex = cart.findIndex(item => item.name === itemName);
+            if (itemIndex > -1) {
+                if (cart[itemIndex].quantity > 1) {
+                    cart[itemIndex].quantity -= 1;
+                } else {
+                    cart.splice(itemIndex, 1);
+                }
+            }
+            updateCartDisplay();
+        }
+
+        function clearCart() {
+            cart = [];
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartSummary = document.getElementById('cart-summary');
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+
+            if (cart.length === 0) {
+                cartSummary.classList.add('hidden');
+                return;
+            }
+
+            cartSummary.classList.remove('hidden');
+
+            let total = 0;
+            cartItems.innerHTML = cart.map(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                return `
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                            <span class="font-medium">${item.name}</span>
+                            <span class="text-sm text-gray-600 ml-2">${item.price} บาท</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="removeFromCart('${item.name}')" class="w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">-</button>
+                            <span class="font-bold">${item.quantity}</span>
+                            <button onclick="addToCart('${item.name}', ${item.price})" class="w-6 h-6 bg-green-500 text-white rounded-full text-xs hover:bg-green-600">+</button>
+                            <span class="font-bold text-green-600 w-16 text-right">${itemTotal} บาท</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            cartTotal.textContent = `${total} บาท`;
+        }
+
+        function proceedToOrder() {
+            if (cart.length === 0) {
+                alert('กรุณาเลือกเมนูก่อน');
+                return;
+            }
+
+            // Create order summary
+            const orderSummary = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            currentOrder = { 
+                name: orderSummary, 
+                price: totalPrice,
+                items: [...cart]
+            };
+
+            document.getElementById('selected-item').innerHTML = `
+                <div class="space-y-2">
+                    ${cart.map(item => `
+                        <div class="flex justify-between items-center">
+                            <span>${item.name} x${item.quantity}</span>
+                            <span class="font-bold text-green-600">${item.price * item.quantity} บาท</span>
+                        </div>
+                    `).join('')}
+                    <div class="border-t pt-2 flex justify-between items-center font-bold">
+                        <span>รวมทั้งหมด:</span>
+                        <span class="text-green-600">${totalPrice} บาท</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('order-modal').classList.remove('hidden');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('order-modal').classList.add('hidden');
+            document.getElementById('order-form').reset();
+        }
+
+        async function submitOrder(event) {
+            event.preventDefault();
+            
+            const studentName = document.getElementById('student-name').value;
+            const timeSlot = document.getElementById('time-slot').value;
+            
+            const orderData = {
+                queueNumber: queueCounter,
+                studentName: studentName,
+                itemName: currentOrder.name,
+                price: currentOrder.price,
+                timeSlot: timeSlot,
+                status: 'waiting',
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                // Send to Google Apps Script
+                const response = await fetch('https://script.google.com/macros/s/AKfycbyndXpOK6PD8zF66HZnmzCRY_pU2IMQ_zK6OkdWla-eyVeh-Be0N6e3FDvgd2FQMue8FA/exec', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                // Store locally as backup
+                queueData.push(orderData);
+                localStorage.setItem('queueData', JSON.stringify(queueData));
+                
+                queueCounter++;
+                localStorage.setItem('queueCounter', queueCounter.toString());
+                
+                // Show success modal
+                document.getElementById('success-details').innerHTML = `
+                    <p><strong>หมายเลขคิว:</strong> ${orderData.queueNumber}</p>
+                    <p><strong>ชื่อ:</strong> ${studentName}</p>
+                    <p><strong>รายการ:</strong> ${currentOrder.name}</p>
+                    <p><strong>ราคา:</strong> ${currentOrder.price} บาท</p>
+                    <p><strong>รอบเวลา:</strong> ${timeSlot}</p>
+                `;
+                
+                // Clear cart after successful order
+                clearCart();
+                closeOrderModal();
+                document.getElementById('success-modal').classList.remove('hidden');
+                
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง');
+                console.error('Error:', error);
+            }
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+
+        // Queue status functions
+        function checkMyQueue() {
+            const name = document.getElementById('check-name').value.trim();
+            if (!name) {
+                alert('กรุณากรอกชื่อ');
+                return;
+            }
+            
+            const myOrders = queueData.filter(order => 
+                order.studentName.toLowerCase().includes(name.toLowerCase()) && 
+                order.status === 'waiting'
+            );
+            
+            if (myOrders.length === 0) {
+                document.getElementById('my-queue-info').innerHTML = `
+                    <div class="text-center">
+                        <div class="text-4xl mb-4">😔</div>
+                        <p class="text-gray-600">ไม่พบคิวของ "${name}"</p>
+                        <button onclick="location.reload()" class="mt-4 btn-primary px-4 py-2 text-white rounded-lg">
+                            ตรวจสอบใหม่
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const waitingQueues = queueData.filter(order => order.status === 'waiting').sort((a, b) => a.queueNumber - b.queueNumber);
+            const myOrder = myOrders[0];
+            const myPosition = waitingQueues.findIndex(order => order.queueNumber === myOrder.queueNumber) + 1;
+            
+            document.getElementById('my-queue-info').innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl font-bold queue-number mb-4">${myOrder.queueNumber}</div>
+                    <h3 class="text-xl font-bold mb-2">คิวของคุณ</h3>
+                    <p class="text-gray-600 mb-2">ชื่อ: ${myOrder.studentName}</p>
+                    <p class="text-gray-600 mb-2">รายการ: ${myOrder.itemName}</p>
+                    <p class="text-gray-600 mb-4">รอบเวลา: ${myOrder.timeSlot}</p>
+                    <div class="bg-yellow-100 p-4 rounded-lg">
+                        <p class="font-bold text-yellow-800">ลำดับที่ ${myPosition} ในคิว</p>
+                    </div>
+                    <button onclick="location.reload()" class="mt-4 btn-primary px-4 py-2 text-white rounded-lg">
+                        รีเฟรช
+                    </button>
+                </div>
+            `;
+        }
+
+        // Current queue functions
+        function updateCurrentQueue() {
+            const waitingQueues = queueData.filter(order => order.status === 'waiting').sort((a, b) => a.queueNumber - b.queueNumber);
+            const preparingQueues = queueData.filter(order => order.status === 'preparing').sort((a, b) => a.queueNumber - b.queueNumber);
+            const completedQueues = queueData.filter(order => order.status === 'completed').sort((a, b) => b.queueNumber - a.queueNumber).slice(0, 3);
+            
+            // Update main current queue display
+            if (waitingQueues.length === 0) {
+                document.getElementById('current-queue-number').textContent = '-';
+                document.getElementById('current-queue-name').textContent = 'ไม่มีคิวรอ';
+            } else {
+                const currentQueue = waitingQueues[0];
+                document.getElementById('current-queue-number').textContent = currentQueue.queueNumber;
+                document.getElementById('current-queue-name').textContent = `${currentQueue.studentName} - ${currentQueue.itemName}`;
+            }
+            
+            // Update preparing queue
+            if (preparingQueues.length === 0) {
+                document.getElementById('preparing-queue').innerHTML = '<p class="text-gray-500 text-sm">ไม่มีคิว</p>';
+            } else {
+                document.getElementById('preparing-queue').innerHTML = preparingQueues.slice(0, 2).map(queue => `
+                    <div class="text-xs">
+                        <div class="font-bold text-orange-600">คิว ${queue.queueNumber}</div>
+                        <div class="text-gray-600">${queue.studentName}</div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update next queue
+            const nextQueues = waitingQueues.slice(1, 3);
+            if (nextQueues.length === 0) {
+                document.getElementById('next-queue').innerHTML = '<p class="text-gray-500 text-sm">ไม่มีคิว</p>';
+            } else {
+                document.getElementById('next-queue').innerHTML = nextQueues.map(queue => `
+                    <div class="text-xs">
+                        <div class="font-bold text-blue-600">คิว ${queue.queueNumber}</div>
+                        <div class="text-gray-600">${queue.studentName}</div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update completed queue
+            if (completedQueues.length === 0) {
+                document.getElementById('completed-queue').innerHTML = '<p class="text-gray-500 text-sm">ไม่มีคิว</p>';
+            } else {
+                document.getElementById('completed-queue').innerHTML = completedQueues.map(queue => `
+                    <div class="text-xs">
+                        <div class="font-bold text-green-600">คิว ${queue.queueNumber}</div>
+                        <div class="text-gray-600">${queue.studentName}</div>
+                    </div>
+                `).join('');
+            }
+            
+            // Show all queues
+            const allQueues = [...waitingQueues, ...preparingQueues];
+            if (allQueues.length > 0) {
+                document.getElementById('all-queues-display').innerHTML = allQueues.map((queue, index) => {
+                    const statusColor = queue.status === 'preparing' ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800';
+                    const statusText = queue.status === 'preparing' ? 'กำลังเตรียม' : 'รอ';
+                    
+                    return `
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span class="font-bold">คิว ${queue.queueNumber}</span>
+                            <span>${queue.studentName}</span>
+                            <span class="text-sm text-gray-600">${queue.itemName}</span>
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusColor}">
+                                ${statusText}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                document.getElementById('all-queues-display').innerHTML = '<p class="text-gray-600 text-center">ไม่มีคิวถัดไป</p>';
+            }
+        }
+
+        // Admin sub-page functions
+        function showAdminSubPage(subPageId) {
+            // Hide all admin sub-pages
+            document.querySelectorAll('.admin-subpage').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show selected sub-page
+            document.getElementById(subPageId + '-subpage').classList.remove('hidden');
+            
+            // Update sub-navigation buttons
+            document.querySelectorAll('.admin-sub-btn').forEach(btn => {
+                btn.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+                btn.classList.add('bg-gray-600', 'hover:bg-gray-700');
+            });
+            
+            document.getElementById(subPageId + '-btn').classList.remove('bg-gray-600', 'hover:bg-gray-700');
+            document.getElementById(subPageId + '-btn').classList.add('bg-purple-600', 'hover:bg-purple-700');
+            
+            // Load data for specific sub-page
+            if (subPageId === 'sales-stats') {
+                // Set default dates (today)
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('start-date').value = today;
+                document.getElementById('end-date').value = today;
+                updateSalesStats();
+            } else if (subPageId === 'queue-management') {
+                updateAllOrders();
+                updateCurrentStatus();
+            }
+        }
+
+        // Admin functions
+        function startNextQueue() {
+            // Check if there's already a queue being prepared
+            const preparingQueues = queueData.filter(order => order.status === 'preparing');
+            
+            if (preparingQueues.length > 0) {
+                alert(`ยังมีคิว ${preparingQueues[0].queueNumber} - ${preparingQueues[0].studentName} ที่กำลังเตรียมอยู่\nกรุณาทำให้เสร็จก่อน`);
+                return;
+            }
+            
+            // Get next waiting queue
+            const waitingQueues = queueData.filter(order => order.status === 'waiting').sort((a, b) => a.queueNumber - b.queueNumber);
+            
+            if (waitingQueues.length === 0) {
+                alert('ไม่มีคิวรอ');
+                return;
+            }
+            
+            const nextQueue = waitingQueues[0];
+            const index = queueData.findIndex(order => order.queueNumber === nextQueue.queueNumber);
+            queueData[index].status = 'preparing';
+            
+            localStorage.setItem('queueData', JSON.stringify(queueData));
+            
+            alert(`🚀 เริ่มเตรียมคิว ${nextQueue.queueNumber} - ${nextQueue.studentName}\n${nextQueue.itemName}`);
+            updateCurrentQueue();
+            updateAllOrders();
+            updateCurrentStatus();
+        }
+
+        function completeCurrentQueue() {
+            const preparingQueues = queueData.filter(order => order.status === 'preparing').sort((a, b) => a.queueNumber - b.queueNumber);
+            
+            if (preparingQueues.length === 0) {
+                alert('ไม่มีคิวที่กำลังเตรียม');
+                return;
+            }
+            
+            const queue = preparingQueues[0];
+            const index = queueData.findIndex(order => order.queueNumber === queue.queueNumber);
+            queueData[index].status = 'completed';
+            
+            localStorage.setItem('queueData', JSON.stringify(queueData));
+            
+            alert(`✅ คิว ${queue.queueNumber} - ${queue.studentName} เสร็จแล้ว!\n📢 กรุณาเรียกลูกค้ามารับ`);
+            updateCurrentQueue();
+            updateAllOrders();
+            updateCurrentStatus();
+        }
+
+        function skipCurrentQueue() {
+            const preparingQueues = queueData.filter(order => order.status === 'preparing').sort((a, b) => a.queueNumber - b.queueNumber);
+            
+            if (preparingQueues.length === 0) {
+                alert('ไม่มีคิวที่กำลังเตรียม');
+                return;
+            }
+            
+            const queue = preparingQueues[0];
+            const index = queueData.findIndex(order => order.queueNumber === queue.queueNumber);
+            
+            // Move to end of waiting queue by changing status back to waiting
+            queueData[index].status = 'waiting';
+            // Update queue number to be last
+            const maxQueueNumber = Math.max(...queueData.map(q => q.queueNumber));
+            queueData[index].queueNumber = maxQueueNumber + 0.5; // Use decimal to maintain order
+            
+            localStorage.setItem('queueData', JSON.stringify(queueData));
+            
+            alert(`⏭️ ข้ามคิว ${queue.queueNumber} - ${queue.studentName}\nย้ายไปท้ายคิวแล้ว`);
+            updateCurrentQueue();
+            updateAllOrders();
+            updateCurrentStatus();
+        }
+
+        function updateCurrentStatus() {
+            const preparingQueues = queueData.filter(order => order.status === 'preparing');
+            const waitingQueues = queueData.filter(order => order.status === 'waiting').sort((a, b) => a.queueNumber - b.queueNumber);
+            const completedQueues = queueData.filter(order => order.status === 'completed');
+            
+            let statusHTML = '';
+            
+            if (preparingQueues.length > 0) {
+                const current = preparingQueues[0];
+                statusHTML += `<div class="mb-2"><span class="font-bold text-orange-600">🔥 กำลังทำ:</span><br>คิว ${current.queueNumber} - ${current.studentName}<br><span class="text-xs text-gray-500">${current.itemName}</span></div>`;
+            } else {
+                statusHTML += `<div class="mb-2"><span class="font-bold text-gray-500">💤 ไม่มีคิวที่กำลังทำ</span></div>`;
+            }
+            
+            if (waitingQueues.length > 0) {
+                statusHTML += `<div class="mb-2"><span class="font-bold text-blue-600">⏳ คิวถัดไป:</span><br>คิว ${waitingQueues[0].queueNumber} - ${waitingQueues[0].studentName}</div>`;
+                statusHTML += `<div><span class="font-bold text-gray-600">📊 รอทั้งหมด:</span> ${waitingQueues.length} คิว</div>`;
+            } else {
+                statusHTML += `<div><span class="font-bold text-gray-500">✨ ไม่มีคิวรอ</span></div>`;
+            }
+            
+            document.getElementById('current-status').innerHTML = statusHTML;
+        }
+
+        // Legacy functions for backward compatibility
+        function callNextQueue() {
+            startNextQueue();
+        }
+
+        function startPreparing() {
+            startNextQueue();
+        }
+
+        function markCompleted() {
+            completeCurrentQueue();
+        }
+
+        function skipQueue() {
+            skipCurrentQueue();
+        }
+
+        function updateAllOrders() {
+            if (queueData.length === 0) {
+                document.getElementById('all-orders').innerHTML = '<p class="text-gray-600 text-center">ไม่มีออเดอร์</p>';
+                return;
+            }
+            
+            const sortedOrders = [...queueData].sort((a, b) => a.queueNumber - b.queueNumber);
+            
+            document.getElementById('all-orders').innerHTML = sortedOrders.map(order => {
+                const statusColor = {
+                    'waiting': 'bg-yellow-100 text-yellow-800',
+                    'called': 'bg-blue-100 text-blue-800',
+                    'preparing': 'bg-orange-100 text-orange-800',
+                    'completed': 'bg-green-100 text-green-800',
+                    'skipped': 'bg-red-100 text-red-800'
+                };
+                
+                const statusText = {
+                    'waiting': 'รอ',
+                    'called': 'เรียกแล้ว',
+                    'preparing': 'กำลังเตรียม',
+                    'completed': 'เสร็จแล้ว',
+                    'skipped': 'ข้าม'
+                };
+                
+                return `
+                    <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                        <div>
+                            <span class="font-bold text-lg">คิว ${order.queueNumber}</span>
+                            <p class="text-gray-600">${order.studentName}</p>
+                            <p class="text-sm text-gray-500">${order.itemName} - ${order.price} บาท</p>
+                            <p class="text-sm text-gray-500">${order.timeSlot}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${statusColor[order.status]}">
+                            ${statusText[order.status]}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Refresh functions
+        function refreshQueueStatus() {
+            // Reload queue data from localStorage
+            queueData = JSON.parse(localStorage.getItem('queueData')) || [];
+            
+            // If there's a name in the input, check the queue again
+            const checkName = document.getElementById('check-name');
+            if (checkName && checkName.value.trim()) {
+                checkMyQueue();
+            }
+            
+            // Show refresh animation
+            const button = event.target.closest('button');
+            const icon = button.querySelector('span');
+            icon.style.transform = 'rotate(360deg)';
+            icon.style.transition = 'transform 0.5s ease';
+            setTimeout(() => {
+                icon.style.transform = 'rotate(0deg)';
+            }, 500);
+        }
+
+        function refreshCurrentQueue() {
+            // Reload queue data from localStorage
+            queueData = JSON.parse(localStorage.getItem('queueData')) || [];
+            updateCurrentQueue();
+            
+            // Show refresh animation
+            const button = event.target.closest('button');
+            const icon = button.querySelector('span');
+            icon.style.transform = 'rotate(360deg)';
+            icon.style.transition = 'transform 0.5s ease';
+            setTimeout(() => {
+                icon.style.transform = 'rotate(0deg)';
+            }, 500);
+        }
+
+        function refreshAdminData() {
+            // Reload queue data from localStorage
+            queueData = JSON.parse(localStorage.getItem('queueData')) || [];
+            queueCounter = parseInt(localStorage.getItem('queueCounter')) || 1;
+            updateAllOrders();
+            updateCurrentStatus();
+            
+            // Show refresh animation
+            const button = event.target.closest('button');
+            const icon = button.querySelector('span');
+            icon.style.transform = 'rotate(360deg)';
+            icon.style.transition = 'transform 0.5s ease';
+            setTimeout(() => {
+                icon.style.transform = 'rotate(0deg)';
+            }, 500);
+        }
+
+        function refreshSalesStats() {
+            updateSalesStats();
+            
+            // Show refresh animation
+            const button = event.target.closest('button');
+            const icon = button.querySelector('span');
+            icon.style.transform = 'rotate(360deg)';
+            icon.style.transition = 'transform 0.5s ease';
+            setTimeout(() => {
+                icon.style.transform = 'rotate(0deg)';
+            }, 500);
+        }
+
+        function loadSalesData() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            if (!startDate || !endDate) {
+                alert('กรุณาเลือกช่วงวันที่');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด');
+                return;
+            }
+            
+            updateSalesStats(startDate, endDate);
+        }
+
+        function updateSalesStats(startDate = null, endDate = null) {
+            let filteredOrders;
+            
+            if (startDate && endDate) {
+                // Filter by date range
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999); // Include the entire end date
+                
+                filteredOrders = queueData.filter(order => {
+                    const orderDate = new Date(order.timestamp);
+                    return orderDate >= start && orderDate <= end && order.status === 'completed';
+                });
+            } else {
+                // Default to today
+                const today = new Date().toDateString();
+                filteredOrders = queueData.filter(order => {
+                    const orderDate = new Date(order.timestamp).toDateString();
+                    return orderDate === today && order.status === 'completed';
+                });
+            }
+
+            // Calculate sales for selected period
+            const totalSales = filteredOrders.reduce((sum, order) => sum + order.price, 0);
+            document.getElementById('today-sales').textContent = `${totalSales} บาท`;
+
+            // Total orders count
+            document.getElementById('total-orders').textContent = filteredOrders.length;
+
+            // Calculate average order value
+            const avgOrderValue = filteredOrders.length > 0 ? Math.round(totalSales / filteredOrders.length) : 0;
+            document.getElementById('avg-order-value').textContent = `${avgOrderValue} บาท`;
+
+            // Calculate popular item
+            const itemCounts = {};
+            filteredOrders.forEach(order => {
+                // Extract individual items from order
+                if (order.items && Array.isArray(order.items)) {
+                    order.items.forEach(item => {
+                        itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity;
+                    });
+                } else {
+                    // Fallback for old format
+                    const items = order.itemName.split(', ');
+                    items.forEach(item => {
+                        const itemName = item.split(' x')[0];
+                        itemCounts[itemName] = (itemCounts[itemName] || 0) + 1;
+                    });
+                }
+            });
+
+            const popularItem = Object.keys(itemCounts).reduce((a, b) => 
+                itemCounts[a] > itemCounts[b] ? a : b, '-'
+            );
+            document.getElementById('popular-item').textContent = popularItem;
+
+            // Average time (placeholder)
+            document.getElementById('avg-time').textContent = '15 นาที';
+
+            // Category sales
+            const categorySales = {
+                'Coffee': { total: 0, count: 0 },
+                'Tea': { total: 0, count: 0 },
+                'Cocoa/Milk': { total: 0, count: 0 },
+                'Italian Soda': { total: 0, count: 0 },
+                'Sandwich': { total: 0, count: 0 }
+            };
+
+            filteredOrders.forEach(order => {
+                if (order.items && Array.isArray(order.items)) {
+                    order.items.forEach(item => {
+                        const category = getCategoryByItem(item.name);
+                        if (categorySales[category]) {
+                            categorySales[category].total += item.price * item.quantity;
+                            categorySales[category].count += item.quantity;
+                        }
+                    });
+                }
+            });
+
+            document.getElementById('category-sales').innerHTML = Object.entries(categorySales)
+                .filter(([category, data]) => data.count > 0)
+                .map(([category, data]) => `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-medium">${category}</span>
+                        <div class="text-right">
+                            <div class="font-bold text-green-600">${data.total} บาท</div>
+                            <div class="text-sm text-gray-600">${data.count} รายการ</div>
+                        </div>
+                    </div>
+                `).join('') || '<p class="text-gray-600 text-center">ไม่มีข้อมูล</p>';
+
+            // Time slot sales
+            const timeSlotSales = {};
+            filteredOrders.forEach(order => {
+                const slot = order.timeSlot;
+                if (!timeSlotSales[slot]) {
+                    timeSlotSales[slot] = { total: 0, count: 0 };
+                }
+                timeSlotSales[slot].total += order.price;
+                timeSlotSales[slot].count += 1;
+            });
+
+            document.getElementById('time-slot-sales').innerHTML = Object.entries(timeSlotSales)
+                .map(([slot, data]) => `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-medium">${slot}</span>
+                        <div class="text-right">
+                            <div class="font-bold text-green-600">${data.total} บาท</div>
+                            <div class="text-sm text-gray-600">${data.count} ออเดอร์</div>
+                        </div>
+                    </div>
+                `).join('') || '<p class="text-gray-600 text-center">ไม่มีข้อมูล</p>';
+
+            // Top items
+            const sortedItems = Object.entries(itemCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+
+            document.getElementById('top-items').innerHTML = sortedItems
+                .map(([item, count], index) => `
+                    <div class="flex justify-between items-center p-2 ${index < 3 ? 'bg-yellow-50' : 'bg-gray-50'} rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <span class="font-bold text-lg ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-400' : 'text-gray-600'}">${index + 1}</span>
+                            <span class="font-medium">${item}</span>
+                        </div>
+                        <span class="font-bold text-purple-600">${count} รายการ</span>
+                    </div>
+                `).join('') || '<p class="text-gray-600 text-center">ไม่มีข้อมูล</p>';
+
+            // Update daily sales chart
+            updateDailySalesChart(startDate, endDate);
+
+            // Update popular menu items
+            updatePopularMenuItems(filteredOrders);
+        }
+
+        function getCategoryByItem(itemName) {
+            const coffeeItems = ['อเมริกาโน่', 'เอสเพรสโซ่', 'คาปูชิโน่', 'มอคค่า', 'ลาเต้'];
+            const teaItems = ['ชาเขียว', 'ชาไทย', 'ชามะนาว', 'ชาดำ', 'ชาเขียวมะนาว'];
+            const milkItems = ['ไมโล', 'โกโก้', 'โอวัลติน', 'นมสดคาราเมล', 'นมชมพู', 'เผือกนมสด'];
+            const sodaItems = ['บลูฮาวาย', 'สตอร์เบอรรี่โซดา', 'แอปเปิ้ลเขียวโซดา', 'สับปะรดโซดา', 'ส้มโซดา', 'น้ำแดงโซดา', 'น้ำเขียวโซดา', 'แดงมะนาวโซดา', 'เขียวมะนาวโซดา', 'น้ำผึ้งมะนาวโซดา'];
+            const sandwichItems = ['แซนด์วิชสามเหลี่ยมเล็ก', 'แซนด์วิชโบราณ'];
+
+            if (coffeeItems.includes(itemName)) return 'Coffee';
+            if (teaItems.includes(itemName)) return 'Tea';
+            if (milkItems.includes(itemName)) return 'Cocoa/Milk';
+            if (sodaItems.includes(itemName)) return 'Italian Soda';
+            if (sandwichItems.includes(itemName)) return 'Sandwich';
+            return 'Other';
+        }
+
+        function updateDailySalesChart(startDate, endDate) {
+            const dailySales = {};
+            
+            // Initialize date range
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    dailySales[dateStr] = { total: 0, orders: 0 };
+                }
+            } else {
+                // Default to last 7 days
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    const dateStr = date.toISOString().split('T')[0];
+                    dailySales[dateStr] = { total: 0, orders: 0 };
+                }
+            }
+
+            // Calculate daily sales
+            queueData.filter(order => order.status === 'completed').forEach(order => {
+                const orderDate = new Date(order.timestamp).toISOString().split('T')[0];
+                if (dailySales[orderDate]) {
+                    dailySales[orderDate].total += order.price;
+                    dailySales[orderDate].orders += 1;
+                }
+            });
+
+            // Find max value for scaling
+            const maxSales = Math.max(...Object.values(dailySales).map(d => d.total));
+            const maxWidth = maxSales > 0 ? maxSales : 100;
+
+            document.getElementById('daily-sales-chart').innerHTML = Object.entries(dailySales)
+                .map(([date, data]) => {
+                    const percentage = maxWidth > 0 ? (data.total / maxWidth) * 100 : 0;
+                    const dateObj = new Date(date);
+                    const displayDate = dateObj.toLocaleDateString('th-TH', { 
+                        day: 'numeric', 
+                        month: 'short' 
+                    });
+                    
+                    return `
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="font-medium">${displayDate}</span>
+                                <span class="text-gray-600">${data.orders} ออเดอร์</span>
+                                <span class="font-bold text-green-600">${data.total} บาท</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-purple-500 to-green-500 h-3 rounded-full transition-all duration-500" 
+                                     style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<p class="text-gray-600 text-center">ไม่มีข้อมูลยอดขาย</p>';
+        }
+
+        function updatePopularMenuItems(filteredOrders) {
+            const itemStats = {};
+            
+            filteredOrders.forEach(order => {
+                if (order.items && Array.isArray(order.items)) {
+                    order.items.forEach(item => {
+                        if (!itemStats[item.name]) {
+                            itemStats[item.name] = {
+                                count: 0,
+                                revenue: 0,
+                                category: getCategoryByItem(item.name),
+                                price: item.price
+                            };
+                        }
+                        itemStats[item.name].count += item.quantity;
+                        itemStats[item.name].revenue += item.price * item.quantity;
+                    });
+                }
+            });
+
+            const sortedItems = Object.entries(itemStats)
+                .sort(([,a], [,b]) => b.count - a.count)
+                .slice(0, 6);
+
+            if (sortedItems.length === 0) {
+                document.getElementById('popular-menu-items').innerHTML = 
+                    '<p class="text-gray-600 text-center col-span-full">ไม่มีข้อมูลเมนู</p>';
+                return;
+            }
+
+            const categoryEmojis = {
+                'Coffee': '☕',
+                'Tea': '🍵',
+                'Cocoa/Milk': '🥛',
+                'Italian Soda': '🥤',
+                'Sandwich': '🥪'
+            };
+
+            document.getElementById('popular-menu-items').innerHTML = sortedItems
+                .map(([itemName, stats], index) => {
+                    const emoji = categoryEmojis[stats.category] || '🍹';
+                    const rankColor = index === 0 ? 'border-yellow-400 bg-yellow-50' : 
+                                    index === 1 ? 'border-gray-400 bg-gray-50' : 
+                                    index === 2 ? 'border-orange-400 bg-orange-50' : 'border-gray-200 bg-white';
+                    
+                    return `
+                        <div class="border-2 ${rankColor} rounded-xl p-4 text-center">
+                            <div class="text-3xl mb-2">${emoji}</div>
+                            <h5 class="font-bold text-sm mb-1">${itemName}</h5>
+                            <div class="text-xs text-gray-600 mb-2">${stats.category}</div>
+                            <div class="space-y-1">
+                                <div class="text-lg font-bold text-purple-600">${stats.count}</div>
+                                <div class="text-xs text-gray-500">รายการ</div>
+                                <div class="text-sm font-bold text-green-600">${stats.revenue} บาท</div>
+                            </div>
+                            ${index < 3 ? `<div class="mt-2 text-xs font-bold ${index === 0 ? 'text-yellow-600' : index === 1 ? 'text-gray-600' : 'text-orange-600'}">#${index + 1}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        async function clearAllQueues() {
+            // First confirmation
+            if (!confirm('⚠️ คำเตือน!\n\nคุณต้องการเคลียร์คิวทั้งหมดใช่หรือไม่?\n\nการกระทำนี้จะลบข้อมูลคิวทั้งหมดและไม่สามารถกู้คืนได้!')) {
+                return;
+            }
+            
+            // Second confirmation
+            if (!confirm('🚨 ยืนยันอีกครั้ง\n\nคุณแน่ใจหรือไม่ว่าต้องการลบคิวทั้งหมด?\n\nข้อมูลคิวทั้งหมดจะถูกลบอย่างถาวร!')) {
+                return;
+            }
+            
+            try {
+                // Send clear command to Google Sheets
+                await fetch('https://script.google.com/macros/s/AKfycbyndXpOK6PD8zF66HZnmzCRY_pU2IMQ_zK6OkdWla-eyVeh-Be0N6e3FDvgd2FQMue8FA/exec', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'clearAll'
+                    })
+                });
+                
+                // Clear all local data
+                queueData = [];
+                cart = [];
+                currentOrder = {};
+                queueCounter = 1;
+                currentQueueIndex = 0;
+                
+                // Update localStorage
+                localStorage.setItem('queueData', JSON.stringify([]));
+                localStorage.setItem('queueCounter', '1');
+                localStorage.setItem('currentQueueIndex', '0');
+                
+                // Refresh all displays
+                updateCartDisplay();
+                updateCurrentQueue();
+                updateAllOrders();
+                updateCurrentStatus();
+                
+                // Success message
+                alert('✅ เคลียร์คิวทั้งหมดเรียบร้อยแล้ว!\n\nทั้ง localStorage และ Google Sheets\n\nระบบพร้อมใช้งานใหม่');
+                
+            } catch (error) {
+                console.error('Error clearing queues:', error);
+                
+                // Clear local data anyway
+                queueData = [];
+                cart = [];
+                currentOrder = {};
+                queueCounter = 1;
+                currentQueueIndex = 0;
+                
+                localStorage.setItem('queueData', JSON.stringify([]));
+                localStorage.setItem('queueCounter', '1');
+                localStorage.setItem('currentQueueIndex', '0');
+                
+                updateCartDisplay();
+                updateCurrentQueue();
+                updateAllOrders();
+                updateCurrentStatus();
+                
+                alert('⚠️ ลบข้อมูลในเครื่องเรียบร้อยแล้ว\nแต่อาจมีปัญหาในการเชื่อมต่อ Google Sheets');
+            }
+        } 
+
+
+        // Auto refresh current queue every 30 seconds
+        setInterval(() => {
+            if (!document.getElementById('current-queue-page').classList.contains('hidden')) {
+                updateCurrentQueue();
+            }
+        }, 30000);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'987267f211224f52',t:'MTc1OTIyMTUyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
